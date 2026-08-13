@@ -1,0 +1,1 @@
+A talk management app with 2 views. One for listing and filtering the presentations and workshops and the other one is CRUD view to admin the presentations and workshops.

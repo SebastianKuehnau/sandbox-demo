@@ -1,1 +1,247 @@
-/* Add your styles here */
+/*
+ * Application styles.
+ *
+ * This project uses the Vaadin Aura theme. Only --aura-* and --vaadin-*
+ * custom properties are used here; --lumo-* belongs to a different, and
+ * incompatible, design system. See spec/design-system.md.
+ */
+
+html {
+  /* Follow the operating system's light/dark preference. */
+  color-scheme: light dark;
+}
+
+/* ---------------------------------------------------------------- Shell */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: var(--vaadin-gap-l);
+  width: 100%;
+  padding-inline: var(--vaadin-padding-m);
+}
+
+.app-name {
+  font-size: var(--aura-font-size-l);
+  font-weight: var(--aura-font-weight-semibold);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* ----------------------------------------------------------- View frame */
+
+.talk-list-view,
+.talk-admin-view {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 75rem;
+  margin-inline: auto;
+  /* The single source of content padding: AppLayout adds none of its own. */
+  padding: var(--vaadin-padding-l);
+}
+
+.view-header {
+  margin-block-end: var(--vaadin-gap-l);
+}
+
+.view-header h1 {
+  margin: 0;
+  font-size: var(--aura-font-size-xl);
+  line-height: var(--aura-line-height-xl);
+  font-weight: var(--aura-font-weight-semibold);
+}
+
+.view-subtitle {
+  margin: var(--vaadin-gap-xs) 0 0;
+  color: var(--vaadin-text-color-secondary);
+  font-size: var(--aura-font-size-m);
+}
+
+.admin-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--vaadin-gap-m);
+}
+
+/* --------------------------------------------------------------- Filters */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--vaadin-gap-m);
+  padding: var(--vaadin-padding-m);
+  border: 1px solid var(--vaadin-border-color-secondary);
+  border-radius: var(--vaadin-radius-l);
+  background-color: var(--aura-surface-color);
+}
+
+.filter-bar vaadin-text-field {
+  flex: 1 1 18rem;
+  max-width: 28rem;
+}
+
+.filter-bar vaadin-radio-group {
+  flex: 0 0 auto;
+}
+
+/*
+ * Aura stacks radio options vertically by default. In a single-line filter bar
+ * a horizontal row reads better and keeps the bar the same height as the
+ * search field next to it.
+ */
+.filter-bar vaadin-radio-group::part(group-field) {
+  flex-direction: row;
+  flex-wrap: wrap;
+  column-gap: var(--vaadin-gap-m);
+}
+
+.result-summary {
+  display: block;
+  margin-block: var(--vaadin-gap-l) var(--vaadin-gap-m);
+  color: var(--vaadin-text-color-secondary);
+  font-size: var(--aura-font-size-s);
+  font-weight: var(--aura-font-weight-medium);
+}
+
+/* ----------------------------------------------------------------- Cards */
+
+.talk-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: var(--vaadin-gap-m);
+  align-items: stretch;
+}
+
+.talk-card {
+  height: 100%;
+}
+
+.talk-card-description {
+  margin: 0;
+  color: var(--vaadin-text-color-secondary);
+  font-size: var(--aura-font-size-s);
+  line-height: var(--aura-line-height-s);
+  /* Keep every card the same height regardless of description length. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+.talk-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vaadin-gap-xs);
+  width: 100%;
+}
+
+.talk-card-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vaadin-gap-xs);
+  color: var(--vaadin-text-color-secondary);
+  font-size: var(--aura-font-size-xs);
+  line-height: var(--aura-line-height-xs);
+}
+
+.talk-card-meta-icon {
+  width: var(--aura-font-size-s);
+  height: var(--aura-font-size-s);
+  flex: none;
+  color: var(--vaadin-text-color-secondary);
+}
+
+/* ----------------------------------------------------------- Empty state */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--vaadin-gap-xs);
+  padding: var(--vaadin-padding-xl) var(--vaadin-padding-l);
+  border: 1px dashed var(--vaadin-border-color-secondary);
+  border-radius: var(--vaadin-radius-l);
+  color: var(--vaadin-text-color-secondary);
+}
+
+.empty-state vaadin-icon {
+  width: var(--aura-font-size-xl);
+  height: var(--aura-font-size-xl);
+  color: var(--vaadin-text-color-secondary);
+}
+
+.empty-state h2 {
+  margin: var(--vaadin-gap-xs) 0 0;
+  font-size: var(--aura-font-size-l);
+  line-height: var(--aura-line-height-l);
+  font-weight: var(--aura-font-weight-semibold);
+  color: var(--vaadin-text-color);
+}
+
+.empty-state p {
+  margin: 0;
+  max-width: 32rem;
+  font-size: var(--aura-font-size-s);
+  line-height: var(--aura-line-height-s);
+}
+
+/* ------------------------------------------------------------ Admin grid */
+
+/*
+ * Let the admin view own the full content height so the grid fills the page
+ * and scrolls internally, instead of sitting in a short default-height box
+ * with dead space beneath it.
+ */
+.talk-admin-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.talk-grid {
+  flex: 1 1 auto;
+  /* Without this a flex child refuses to shrink below its content height. */
+  min-height: 15rem;
+  border-radius: var(--vaadin-radius-l);
+}
+
+.row-actions {
+  display: flex;
+  gap: var(--vaadin-gap-xs);
+}
+
+/* ------------------------------------------------------------------ Form */
+
+.talk-form-dialog::part(overlay) {
+  width: 40rem;
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------------ Responsive */
+
+@media (max-width: 640px) {
+  .talk-list-view,
+  .talk-admin-view {
+    padding: var(--vaadin-padding-m);
+  }
+
+  .talk-results {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar vaadin-text-field,
+  .filter-bar vaadin-radio-group {
+    flex: 1 1 100%;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

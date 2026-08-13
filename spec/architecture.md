@@ -15,10 +15,21 @@
   Spring Data JPA with `ddl-auto=update`. Tests use a throwaway in-memory H2 under the
   `test` profile.
 - Routing: Vaadin Flow views use `@Route` with `layout = MainLayout.class`.
-- Testing: JUnit 5, Vaadin Browserless Tests (`browserless-test-spring`). Tests are organized per
-  use case, not per view — see `/use-case-tests` for the convention. Because that convention names
-  classes `UC001…`, `maven-surefire-plugin` carries an explicit `<includes>` for `**/UC*.java`;
-  without it Surefire's default patterns match nothing and the suite silently runs zero tests.
+- Testing: JUnit 5, in two layers, both organized per use case rather than per view — see
+  `/use-case-tests` for the convention:
+  - **Browserless** (`browserless-test-spring`), classes `UC0NN…`. Run the Flow views on the JVM in
+    milliseconds. The fast feedback loop, executed by `mvn test`.
+  - **Playwright** (`com.microsoft.playwright:playwright`), classes `UC0NN…E2E`. Drive the same
+    flows through a real Chromium against the app on a random port, so rendering, the
+    client-server round trip and the web components are covered too. Executed by `mvn verify`.
+
+  Two build details make this work, and both fail silently if removed:
+  - `maven-surefire-plugin` needs an explicit `<includes>` for `**/UC*.java`, because the use-case
+    naming convention matches none of Surefire's default patterns — without it the suite reports
+    success while running zero tests. It excludes `**/UC*E2E.java`, which `maven-failsafe-plugin`
+    picks up instead.
+  - The failsafe execution sets `vaadin.copilot.enable=false`. In development mode Copilot renders
+    a viewport-wide overlay that swallows pointer events, so browser clicks never reach the app.
 
 ---
 
@@ -52,9 +63,17 @@ Tests mirror use cases rather than classes:
 
 ```
 src/test/java/dev/vaadin/usecases/
-  uc001_list_and_filter_talks/UC001ListAndFilterTalks.java
-  uc002_admin_crud_talks/UC002AdminCrudTalks.java
+  e2e/PlaywrightE2ETest.java                        — shared browser/server setup
+  uc001_list_and_filter_talks/
+    UC001ListAndFilterTalks.java                    — browserless
+    UC001ListAndFilterTalksE2E.java                 — Playwright
+  uc002_admin_crud_talks/
+    UC002AdminCrudTalks.java                        — browserless
+    UC002AdminCrudTalksE2E.java                     — Playwright
 ```
+
+Both layers of a use case live in its folder and share its `UC0NN` name, so a flow can be read
+across mechanisms in one place.
 
 ---
 

@@ -134,9 +134,12 @@ Administrator navigates to the admin talk management view or initiates a create/
 - [x] AF-5 (Cancel form) covered
 - [x] BR-01 through BR-07 covered
 
-Implemented by `src/test/java/dev/vaadin/usecases/uc002_admin_crud_talks/UC002AdminCrudTalks.java`
-(14 tests: browserless for the view flows, plain `@SpringBootTest` against `TalkService`
-for the rules that do not need a UI).
+Covered twice, in `src/test/java/dev/vaadin/usecases/uc002_admin_crud_talks/`:
+
+| Class | Mechanism | Tests | Run by |
+|-------|-----------|-------|--------|
+| `UC002AdminCrudTalks` | Vaadin browserless, plus plain `@SpringBootTest` against `TalkService` for the rules that need no UI | 14 | `mvn test` |
+| `UC002AdminCrudTalksE2E` | Playwright (Chromium) | 14 | `mvn verify` |
 
 ---
 

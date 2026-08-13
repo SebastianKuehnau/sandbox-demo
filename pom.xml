@@ -10,6 +10,7 @@
     <properties>
         <java.version>25</java.version>
         <vaadin.version>25.2.6</vaadin.version>
+        <playwright.version>1.62.0</playwright.version>
     </properties>
     
     <parent>
@@ -69,6 +70,12 @@
             <artifactId>browserless-test-spring</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     
     <build>
@@ -94,7 +101,40 @@
                         <include>**/*Tests.java</include>
                         <include>**/*TestCase.java</include>
                     </includes>
+                    <excludes>
+                        <!-- Browser-driven tests need a real browser; they run in verify. -->
+                        <exclude>**/UC*E2E.java</exclude>
+                    </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <!--
+                      Playwright end-to-end tests. Kept out of `mvn test` so the fast
+                      browserless loop stays fast; `mvn verify` runs both layers.
+                    -->
+                    <includes>
+                        <include>**/UC*E2E.java</include>
+                    </includes>
+                    <systemPropertyVariables>
+                        <!--
+                          Copilot renders a full-viewport overlay in development mode
+                          that swallows pointer events, so clicks never reach the app.
+                        -->
+                        <vaadin.copilot.enable>false</vaadin.copilot.enable>
+                        <vaadin.devmode.usageStatistics.enabled>false</vaadin.devmode.usageStatistics.enabled>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>com.vaadin</groupId>

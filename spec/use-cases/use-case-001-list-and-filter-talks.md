@@ -88,8 +88,12 @@ User navigates to the public talk listing view or applies a filter/search.
 - [x] AF-2 covered (clear filters)
 - [x] BR-01, BR-02, BR-03, BR-04 covered
 
-Implemented by `src/test/java/dev/vaadin/usecases/uc001_list_and_filter_talks/UC001ListAndFilterTalks.java`
-(10 browserless tests).
+Covered twice, in `src/test/java/dev/vaadin/usecases/uc001_list_and_filter_talks/`:
+
+| Class | Mechanism | Tests | Run by |
+|-------|-----------|-------|--------|
+| `UC001ListAndFilterTalks` | Vaadin browserless | 10 | `mvn test` |
+| `UC001ListAndFilterTalksE2E` | Playwright (Chromium) | 10 | `mvn verify` |
 
 ---
 

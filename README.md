@@ -2,6 +2,34 @@
 
 A project template for building applications with AI by writing specifications instead of chat prompts. Specs in `spec/` are the single source of truth — the AI reads them, writes code, verifies the result visually, and writes tests.
 
+## Try It Out: Docker Sandbox
+
+This is the fastest way to see the whole flow in action, in an isolated environment. The example project is available at https://github.com/SebastianKuehnau/sandbox-demo.
+
+1. **Check out the starting branch:**
+
+   ```bash
+   git checkout 01-start
+   ```
+
+2. **Install the Docker Sandbox CLI (`sbx`)**, if you haven't already. Follow the official guide: https://docs.docker.com/ai/sandboxes/get-started/
+
+3. **Start the sandbox with this project's kit:**
+
+   ```bash
+   sbx run claude --kit .sbx/kit --name sandbox-demo-claude
+   ```
+
+4. **In the Claude Code terminal that opens, type:**
+
+   ```
+   /implement-use-case
+   ```
+
+   It will ask you which use case from `spec/use-cases/` should be implemented. Once you pick one, it drives the spec-driven workflow end-to-end: it writes the code, verifies the UI visually, writes tests, and commits.
+
+See [Running in a Docker Sandbox](#running-in-a-docker-sandbox) below for managing the sandbox (listing, removing) once you're done exploring.
+
 ## Getting Started
 
 ### 1. Know where the project-wide rules live

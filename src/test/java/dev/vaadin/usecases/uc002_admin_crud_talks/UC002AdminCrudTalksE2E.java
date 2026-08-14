@@ -18,7 +18,7 @@ import com.microsoft.playwright.Locator;
 
 import dev.vaadin.talk.domain.Talk;
 import dev.vaadin.talk.domain.TalkType;
-import dev.vaadin.usecases.e2e.PlaywrightE2ETest;
+import dev.vaadin.usecases.playwright.AbstractPlaywrightE2ETest;
 
 /**
  * Browser-driven tests for UC-002: Admin CRUD Operations for Talks.
@@ -31,7 +31,7 @@ import dev.vaadin.usecases.e2e.PlaywrightE2ETest;
  * @see <a href="../../../../../../spec/use-cases/use-case-002-admin-crud-talks.md">
  *      spec/use-cases/use-case-002-admin-crud-talks.md</a>
  */
-class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
+class UC002AdminCrudTalksE2E extends AbstractPlaywrightE2ETest {
 
     private static final String EXISTING_TITLE = "Signals in Vaadin";
     private static final String OTHER_TITLE = "Accessibility Clinic";

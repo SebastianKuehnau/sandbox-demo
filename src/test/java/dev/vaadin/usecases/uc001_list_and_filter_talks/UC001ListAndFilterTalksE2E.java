@@ -17,7 +17,7 @@ import com.microsoft.playwright.Locator;
 import dev.vaadin.talk.domain.Talk;
 import dev.vaadin.talk.domain.TalkType;
 import dev.vaadin.talk.ui.TalkFormats;
-import dev.vaadin.usecases.e2e.PlaywrightE2ETest;
+import dev.vaadin.usecases.playwright.AbstractPlaywrightE2ETest;
 
 /**
  * Browser-driven tests for UC-001: List and Filter Talks.
@@ -29,7 +29,7 @@ import dev.vaadin.usecases.e2e.PlaywrightE2ETest;
  * @see <a href="../../../../../../spec/use-cases/use-case-001-list-and-filter-talks.md">
  *      spec/use-cases/use-case-001-list-and-filter-talks.md</a>
  */
-class UC001ListAndFilterTalksE2E extends PlaywrightE2ETest {
+class UC001ListAndFilterTalksE2E extends AbstractPlaywrightE2ETest {
 
     private LocalDateTime base;
 

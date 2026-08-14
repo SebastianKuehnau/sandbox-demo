@@ -1,4 +1,4 @@
-package dev.vaadin.usecases.e2e;
+package dev.vaadin.usecases.playwright;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,7 +36,7 @@ import dev.vaadin.talk.domain.TalkRepository;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public abstract class PlaywrightE2ETest {
+public abstract class AbstractPlaywrightE2ETest {
 
     /** Matches the resolution used for visual verification. */
     private static final int VIEWPORT_WIDTH = 1920;

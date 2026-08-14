@@ -7,6 +7,34 @@ The application itself is deliberately modest. The point of this repository is *
 built — every line of it was written by an AI agent from the specifications in [`spec/`](spec/),
 running inside a Docker Sandbox.
 
+## Try It Out: Docker Sandbox
+
+This is the fastest way to see the whole flow in action, in an isolated environment. The example project is available at https://github.com/SebastianKuehnau/sandbox-demo.
+
+1. **Check out the starting branch:**
+
+   ```bash
+   git checkout 01-start
+   ```
+
+2. **Install the Docker Sandbox CLI (`sbx`)**, if you haven't already. Follow the official guide: https://docs.docker.com/ai/sandboxes/get-started/
+
+3. **Start the sandbox with this project's kit:**
+
+   ```bash
+   sbx run claude --kit .sbx/kit --name sandbox-demo-claude
+   ```
+
+4. **In the Claude Code terminal that opens, type:**
+
+   ```
+   /implement-use-case
+   ```
+
+   It will ask you which use case from `spec/use-cases/` should be implemented. Once you pick one, it drives the spec-driven workflow end-to-end: it writes the code, verifies the UI visually, writes tests, and commits.
+
+See [Running in a Docker Sandbox](#running-in-a-docker-sandbox) below for managing the sandbox (listing, removing) once you're done exploring.
+
 ---
 
 ## How this project came to be

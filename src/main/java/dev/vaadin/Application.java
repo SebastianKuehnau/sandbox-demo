@@ -14,8 +14,7 @@ import com.vaadin.flow.component.page.Push;
 @Push
 public class Application implements AppShellConfigurator {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
-
 }

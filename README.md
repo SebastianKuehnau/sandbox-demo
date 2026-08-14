@@ -1,60 +1,206 @@
-# Spec-Driven Development Template
+# Talk Manager — a Spec-Driven Development Demo
 
-A project template for building applications with AI by writing specifications instead of chat prompts. Specs in `spec/` are the single source of truth — the AI reads them, writes code, verifies the result visually, and writes tests.
+A small Vaadin application for managing conference talks: visitors browse and filter presentations
+and workshops, administrators keep the catalog up to date.
 
-## Getting Started
+The application itself is deliberately modest. The point of this repository is **how** it was
+built — every line of it was written by an AI agent from the specifications in [`spec/`](spec/),
+running inside a Docker Sandbox.
 
-### 1. Know where the project-wide rules live
+---
 
-These files describe the project as a whole. They ship with sensible defaults (Vaadin + Spring Boot stack, a working design system, standard structure), so **you don't have to edit anything to get going** — you can jump straight to writing a use case.
+## How this project came to be
 
-Edit them when you want to deviate from the defaults or add project-specific context.
+| | |
+|---|---|
+| **Scaffolded at** | [start.vaadin.com](https://start.vaadin.com) — spec-driven development project |
+| **AI tool** | [Claude Code](https://claude.com/claude-code) |
+| **Environment** | Claude Code running sandboxed in a Docker Sandbox |
+
+Everything grew out of a single prompt given to the project generator:
+
+> A talk management app with 2 views. One for listing and filtering the presentations and workshops
+> and the other one is CRUD view to admin the presentations and workshops.
+
+That prompt became the specifications in [`spec/`](spec/) — a project context, an architecture, a
+data model, a design system and two use cases. Claude Code then implemented those use cases:
+writing the code, verifying the result visually in a browser, writing tests on two levels, and
+committing each step.
+
+### Why it exists
+
+This repository is a **hands-on demo of running Claude Code sandboxed with Docker Sandbox**. The
+agent gets a container with its own filesystem, its own network policy and its own browser, so it
+can install packages, start the application, drive a real browser against it and commit — without
+touching the host.
+
+What that gave the agent while building this project:
+
+- **Freedom to install.** It added Maven dependencies, downloaded a 300 MB Chromium and started
+  servers, all inside the container.
+- **A real browser.** Visual verification and the Playwright tests ran against a live server in the
+  sandbox, not against mocks.
+- **A restricted network.** Outbound access goes through a proxy with an allow/deny policy, so a
+  blocked host fails loudly with an explanation instead of silently reaching the internet.
+- **Host-controlled Git.** Credentials are injected at the network level, so the agent can push
+  without ever holding a token.
+
+The sandbox conventions the agent follows — environment persistence, the network policy, publishing
+ports, Git authentication — are kept in a `CLAUDE.md` alongside the sandbox setup, outside this
+repository.
+
+If you want to follow along rather than just read the result, the commit history is the story: one
+commit per meaningful step, each message explaining what was decided and why.
+
+---
+
+## The application
+
+Two views, no login:
+
+| Route | View | Who | What |
+|-------|------|-----|------|
+| `/` | Talk listing | Anyone | Browse all talks, search by keyword, filter by type, clear filters |
+| `/admin` | Talk administration | Anyone | Create, edit and delete talks |
+
+> **There is no authentication.** `/admin` is reachable by anyone who can reach the server. This was
+> a deliberate choice for a demo — see [`spec/architecture.md`](spec/architecture.md) §4, which also
+> lists what adding authentication would involve. Do not expose this as-is on an untrusted network.
+
+**Stack:** Vaadin 25 (Flow, Aura theme) · Spring Boot 4.1 · Spring Data JPA · H2 · Java 25+ · Maven
+
+Talks are stored in a file-based H2 database under `./data/` (git-ignored). On the first start with
+an empty database, a seeder inserts eight demo talks so the listing isn't blank. Delete `data/` to
+get a fresh seed.
+
+---
+
+## Running the application
+
+```bash
+./mvnw                            # dev mode (default goal: spring-boot:run) → http://localhost:8080
+./mvnw clean package              # production build (JAR in target/)
+```
+
+If you are running inside a Docker Sandbox, the app is not reachable from the host until you publish
+the port. On the **host**, with `<sandbox>` being the sandbox name (`$SANDBOX_VM_ID` inside it):
+
+```bash
+sbx ports <sandbox> --publish 8080:8080/tcp
+```
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for more build and Docker commands.
+
+---
+
+## Tests
+
+The two use cases are each covered **twice**, by the same flows on two different levels. Tests are
+organized per use case rather than per class, so a use case can be read as a single unit — the
+convention is described in [`.claude/skills/use-case-tests/SKILL.md`](.claude/skills/use-case-tests/SKILL.md).
+
+| Layer | Classes | Tests | What it proves |
+|-------|---------|-------|----------------|
+| Vaadin browserless | `UC001ListAndFilterTalks`, `UC002AdminCrudTalks` | 24 | View logic and business rules, on the JVM, in milliseconds |
+| Playwright | `UC001ListAndFilterTalksE2E`, `UC002AdminCrudTalksE2E` | 24 | The same flows in a real browser: rendering, client-server round trips, web components |
+
+### Commands
+
+```bash
+./mvnw test                       # browserless only — the fast loop (~5 s)
+./mvnw verify                     # both layers: browserless, then Playwright
+```
+
+Running a single Playwright class or method (`it.test` is the Failsafe counterpart of `test`):
+
+```bash
+# one E2E class, still running the browserless tests first
+./mvnw verify -Dit.test=UC001ListAndFilterTalksE2E -DfailIfNoSpecifiedTests=false
+
+# one E2E method, skipping the browserless layer entirely
+./mvnw verify -Dtest=None -Dsurefire.failIfNoSpecifiedTests=false \
+  -Dit.test='UC002AdminCrudTalksE2E#af2_deleteTalkAfterConfirmation' \
+  -DfailIfNoSpecifiedTests=false
+```
+
+### How the Playwright tests work
+
+- **No server to start.** `AbstractPlaywrightE2ETest` boots the real application on a random port
+  with `@SpringBootTest`, so `mvn verify` is all you need.
+- **Own browser.** Playwright for Java downloads its own Chromium on the first run (~300 MB, cached
+  in `~/.cache/ms-playwright`). No npm toolchain is added to the project.
+- **Own data.** Each test seeds exactly the talks it asserts on, against an in-memory H2 under the
+  `test` profile, with the demo-data seeder switched off.
+
+Three details make them behave the same on every machine. All three were learned the hard way, and
+are documented in [`spec/architecture.md`](spec/architecture.md) §1:
+
+- Vaadin **Copilot** renders a viewport-wide overlay in development mode that swallows pointer
+  events, so the Failsafe run sets `vaadin.copilot.enable=false`.
+- The date field is set through its **ISO value** rather than by typing a formatted string, because
+  the picker parses per browser and JVM locale — and the JDK's CLDR data changed the AM/PM separator
+  between releases.
+- Dialog open/closed is asserted from the dialog's own `opened` property, because a closed Vaadin
+  overlay leaves its content in the DOM with a layout box.
+
+---
+
+## How spec-driven development works here
+
+The specifications are the source of truth. If the AI gets something wrong, the fix is to sharpen a
+spec file and re-run — not to repeat yourself in chat.
 
 | File | What goes here |
 |------|----------------|
-| `spec/project-context.md` | Vision, users, scope, constraints |
-| `spec/architecture.md` | Tech stack and application structure |
-| `spec/datamodel/datamodel.md` | Entities and relationships |
-| `spec/design-system.md` | Theme, components, visual standards |
+| [`spec/project-context.md`](spec/project-context.md) | Vision, users, scope, constraints |
+| [`spec/architecture.md`](spec/architecture.md) | Tech stack, application structure, testing strategy |
+| [`spec/datamodel/datamodel.md`](spec/datamodel/datamodel.md) | Entities and relationships |
+| [`spec/design-system.md`](spec/design-system.md) | Theme, components, visual standards |
+| [`spec/use-cases/`](spec/use-cases/) | One file per capability: flows, business rules, UI surface |
 
-If the AI keeps getting something wrong or makes a choice you disagree with, the fix is almost always to add or sharpen a rule in one of these files — not to repeat yourself in chat.
-
-### 2. Define use cases
-
-Features are specified as use cases in `spec/use-cases/`. Each use case is one file describing one capability (e.g. "browse movies", "buy a ticket", "admin manages screenings").
-
-The fastest way is to invoke the **`new-use-case`** skill — it interviews you for the details and writes a filled-in file in `spec/use-cases/` for you. A fresh project may have no use cases yet; just run the skill to add the first one.
-
-If you'd rather write it by hand, copy `spec/use-cases/use-case-template.md` to `use-case-NNN-short-name.md` and fill it in: main flow, business rules, acceptance criteria, routes.
-
-### 3. Implement use cases one at a time
-
-**For most work, one skill is all you need:** the **`implement-use-case`** skill, invoked with the use case name or number. It drives the whole flow — writes code, verifies the UI visually, writes tests, commits.
-
-Two helper skills exist for when you want to run a single step on its own:
+The agent's workflow is packaged as skills under [`.claude/skills/`](.claude/skills/):
 
 | Skill | Purpose |
 |-------|---------|
-| `implement-use-case` | Implements a use case end-to-end: writes code, runs visual verification, writes tests, commits |
-| `visual-verification` | Runs Playwright against the app and checks the UI against the use case |
-| `use-case-tests` | Writes and runs the automated tests for a use case |
+| `new-use-case` | Interviews you and writes a filled-in use case file |
+| `implement-use-case` | Implements a use case end to end: code, visual verification, tests, commit |
+| `visual-verification` | Drives a browser and checks the UI against the use case |
+| `use-case-tests` | Writes and runs the tests for a use case |
 
-`implement-use-case` invokes the other two as part of its flow, so you rarely need to run them directly.
+`implement-use-case` invokes the other two as part of its flow. Different AI tools invoke skills
+differently — in Claude Code they are slash commands, e.g. `/implement-use-case use-case-001`.
 
-> Skill definitions live under `.claude/skills/`. Different AI tools invoke skills differently — some have shortcut syntax, others expect you to point the AI at the skill file. Use whatever your tool supports; the skills themselves are the same.
+### Adding a feature
 
-## A Typical Run-Through
+1. Write the use case: run `new-use-case`, or copy
+   [`spec/use-cases/use-case-template.md`](spec/use-cases/use-case-template.md) and fill it in.
+2. Run `implement-use-case` for it.
+3. Click through the result. If something is off, update the use case (or a project-wide rule) and
+   re-run — don't patch the code by hand and leave the spec stale.
 
-Say you have three use cases: `use-case-001-browse-movies.md`, `use-case-002-buy-ticket.md`, `use-case-003-admin-screenings.md`.
+---
 
-1. **(Optional) Tweak the defaults.** Skim `spec/project-context.md` and `spec/architecture.md`. Fill in any `[bracketed placeholders]` you care about — or leave them; the defaults work.
-2. **Implement the first use case.** Run the `implement-use-case` skill for use case 001. When it finishes you have a running application with browsing working, screenshots verified, tests passing, and a commit on the branch.
-3. **Review and adjust.** Run the app (`./mvnw` — see [DEVELOPMENT.md](DEVELOPMENT.md)), click through it. If something is off, update the use case file (or a project-wide rule) and re-run `implement-use-case` for 001.
-4. **Move on to the next use case.** Run `implement-use-case` for 002, then 003. Don't move on until the previous one is fully done — code, visual check, tests, commit.
+## Project structure
 
-After all three you have an application that does the three things you specified, with tests covering each, and a spec folder that explains why everything looks the way it does.
+```
+spec/                             specifications — the source of truth
+.claude/skills/                   the agent's workflow
+src/main/java/dev/vaadin/
+  Application.java
+  talk/
+    domain/                       Talk entity, TalkType, repository
+    service/                      business logic, business rules, demo-data seeder
+    ui/                           MainLayout, the two views, card, form dialog
+src/main/resources/
+  META-INF/resources/styles.css   custom styles (Aura tokens only)
+src/test/java/dev/vaadin/usecases/
+  playwright/                     shared Playwright + server setup
+  uc001_list_and_filter_talks/    both test layers for UC-001
+  uc002_admin_crud_talks/         both test layers for UC-002
+```
 
 ## More
 
 - [`spec/README.md`](spec/README.md) — full spec structure and workflow
-- [DEVELOPMENT.md](DEVELOPMENT.md) — build, run, and test commands
+- [DEVELOPMENT.md](DEVELOPMENT.md) — build, run and Docker commands
+- [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) — running coding agents sandboxed

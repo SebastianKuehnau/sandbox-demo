@@ -55,33 +55,6 @@ data model, a design system and two use cases. Claude Code then implemented thos
 writing the code, verifying the result visually in a browser, writing tests on two levels, and
 committing each step.
 
-### Why it exists
-
-This repository is a **hands-on demo of running Claude Code sandboxed with Docker Sandbox**. The
-agent gets a container with its own filesystem, its own network policy and its own browser, so it
-can install packages, start the application, drive a real browser against it and commit — without
-touching the host.
-
-What that gave the agent while building this project:
-
-- **Freedom to install.** It added Maven dependencies, downloaded a 300 MB Chromium and started
-  servers, all inside the container.
-- **A real browser.** Visual verification and the Playwright tests ran against a live server in the
-  sandbox, not against mocks.
-- **A restricted network.** Outbound access goes through a proxy with an allow/deny policy, so a
-  blocked host fails loudly with an explanation instead of silently reaching the internet.
-- **Host-controlled Git.** Credentials are injected at the network level, so the agent can push
-  without ever holding a token.
-
-The sandbox conventions the agent follows — environment persistence, the network policy, publishing
-ports, Git authentication — are kept in a `CLAUDE.md` alongside the sandbox setup, outside this
-repository.
-
-If you want to follow along rather than just read the result, the commit history is the story: one
-commit per meaningful step, each message explaining what was decided and why.
-
----
-
 ## The application
 
 Two views, no login:

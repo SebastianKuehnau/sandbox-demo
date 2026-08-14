@@ -5,9 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -37,11 +36,6 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
     private static final String EXISTING_TITLE = "Signals in Vaadin";
     private static final String OTHER_TITLE = "Accessibility Clinic";
 
-    private static final DateTimeFormatter DATE_INPUT =
-            DateTimeFormatter.ofPattern("M/d/yyyy", Locale.ENGLISH);
-    private static final DateTimeFormatter TIME_INPUT =
-            DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
-
     private LocalDateTime future;
 
     @BeforeEach
@@ -64,7 +58,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
         assertEquals(2, gridRowCount());
 
         page.getByTestId("create-talk").click();
-        assertThat(formDialog()).isVisible();
+        assertFormOpen();
 
         LocalDateTime scheduled = future.plusDays(10).withHour(10).withMinute(30);
         fillForm("Observability for Vaadin Apps", "Tracing, metrics and structured logging.",
@@ -72,7 +66,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
         page.getByTestId("save-talk").click();
 
         // Step 7: the form closes and the list shows the new talk.
-        assertThat(formDialog()).isHidden();
+        assertFormClosed();
         assertThat(gridCell("Observability for Vaadin Apps")).isVisible();
         assertEquals(3, gridRowCount());
 
@@ -96,7 +90,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
         open("/admin");
 
         editButtonFor(EXISTING_TITLE).click();
-        assertThat(formDialog()).isVisible();
+        assertFormOpen();
         // AF-1 step 1: the form is pre-populated.
         assertThat(field("form-title")).hasValue(EXISTING_TITLE);
         assertThat(field("form-speaker")).hasValue("Amara Osei");
@@ -105,7 +99,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
         field("form-duration").fill("60");
         page.getByTestId("save-talk").click();
 
-        assertThat(formDialog()).isHidden();
+        assertFormClosed();
         assertThat(gridCell("Signals in Vaadin 25")).isVisible();
         assertEquals(2, gridRowCount(), "editing must not add a row");
         assertThat(notification("Talk updated")).isVisible();
@@ -158,7 +152,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
                 future.plusDays(3).withHour(9).withMinute(0), 60, "Room 1");
         page.getByTestId("save-talk").click();
 
-        assertThat(formDialog()).isVisible();
+        assertFormOpen();
         assertThat(fieldError("form-title", "Title is required")).isVisible();
         assertEquals(2, gridRowCount(), "nothing should have been persisted");
 
@@ -166,7 +160,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
         field("form-title").fill("A Corrected Title");
         page.getByTestId("save-talk").click();
 
-        assertThat(formDialog()).isHidden();
+        assertFormClosed();
         assertThat(gridCell("A Corrected Title")).isVisible();
         assertEquals(3, gridRowCount());
     }
@@ -180,7 +174,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
         field("form-title").fill("This Should Never Be Saved");
         page.getByTestId("cancel-talk").click();
 
-        assertThat(formDialog()).isHidden();
+        assertFormClosed();
         assertEquals(2, gridRowCount());
         assertThat(gridCell(EXISTING_TITLE)).isVisible();
         assertTrue(findByTitle("This Should Never Be Saved").isEmpty());
@@ -196,7 +190,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
 
         page.getByTestId("save-talk").click();
 
-        assertThat(formDialog()).isVisible();
+        assertFormOpen();
         Map.of("form-title", "Title is required",
                         "form-description", "Description is required",
                         "form-speaker", "Speaker name is required",
@@ -219,7 +213,7 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
                 future.plusDays(3).withHour(9).withMinute(0), 30, "Room 1");
         page.getByTestId("save-talk").click();
 
-        assertThat(formDialog()).isVisible();
+        assertFormOpen();
         assertThat(fieldError("form-title", "Title is required")).isVisible();
         assertThat(fieldError("form-speaker", "Speaker name is required")).isVisible();
         assertEquals(2, gridRowCount());
@@ -264,13 +258,13 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
 
         open("/admin");
         editButtonFor("Last Year's Keynote").click();
-        assertThat(formDialog()).isVisible();
+        assertFormOpen();
 
         // Change only the speaker, leaving the past date exactly as stored.
         field("form-speaker").fill("A Different Speaker");
         page.getByTestId("save-talk").click();
 
-        assertThat(formDialog()).isHidden();
+        assertFormClosed();
         assertThat(notification("Talk updated")).isVisible();
         assertEquals("A Different Speaker",
                 findByTitle("Last Year's Keynote").orElseThrow().getSpeakerName());
@@ -329,13 +323,29 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
     // -------------------------------------------------------------- Helpers
 
     /**
-     * Whether the form is open, judged by its first field.
+     * Waits until the form dialog is open, or fails.
      *
-     * <p>{@code vaadin-dialog} itself is a non-rendering host, so its own
-     * visibility says nothing about whether the user can see the form.
+     * <p>Judged by the dialog's own {@code opened} state rather than the
+     * visibility of a field inside it: while the overlay animates shut, Vaadin
+     * marks its content {@code aria-hidden} but the fields still occupy a box,
+     * so a visibility check reports "open" for a dialog that is closing.
      */
-    private Locator formDialog() {
-        return page.getByTestId("form-title");
+    private void assertFormOpen() {
+        awaitFormOpened(true);
+    }
+
+    /** Waits until the form dialog is closed, or fails. */
+    private void assertFormClosed() {
+        awaitFormOpened(false);
+    }
+
+    private void awaitFormOpened(boolean opened) {
+        page.waitForFunction(
+                "expected => {"
+                        + "  const d = document.querySelector('vaadin-dialog.talk-form-dialog');"
+                        + "  return expected ? (!!d && !!d.opened) : (!d || !d.opened);"
+                        + "}",
+                opened);
     }
 
     private Locator field(String testId) {
@@ -385,14 +395,27 @@ class UC002AdminCrudTalksE2E extends PlaywrightE2ETest {
             page.getByTestId("form-type").click();
             typeOptions().filter(new Locator.FilterOptions().setHasText(type)).first().click();
         }
-        page.getByTestId("form-scheduled-date").locator("vaadin-date-picker input")
-                .fill(scheduled.format(DATE_INPUT));
-        page.keyboard().press("Enter");
-        page.getByTestId("form-scheduled-date").locator("vaadin-time-picker input")
-                .fill(scheduled.format(TIME_INPUT));
-        page.keyboard().press("Enter");
+        setScheduledDate(scheduled);
         field("form-duration").fill(String.valueOf(duration));
         field("form-location").fill(location);
+        waitForVaadin();
+    }
+
+    /**
+     * Sets the scheduled date through the picker's ISO value.
+     *
+     * <p>Deliberately not typed as text. The picker parses according to the
+     * browser/JVM locale, and the JDK's CLDR data even changed the AM/PM
+     * separator to a narrow no-break space in recent releases — typing a
+     * formatted string makes the suite depend on the machine it runs on. The ISO
+     * value is stable everywhere. Date *rendering* is still asserted from the
+     * user's point of view in UC-001 BR-01.
+     */
+    private void setScheduledDate(LocalDateTime value) {
+        page.getByTestId("form-scheduled-date").evaluate(
+                "(el, iso) => { el.value = iso;"
+                        + " el.dispatchEvent(new Event('change', { bubbles: true })); }",
+                value.truncatedTo(ChronoUnit.MINUTES).toString());
         waitForVaadin();
     }
 

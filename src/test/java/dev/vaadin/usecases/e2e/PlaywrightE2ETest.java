@@ -74,7 +74,9 @@ public abstract class PlaywrightE2ETest {
     @BeforeEach
     void openPage() {
         context = browser.newContext(new Browser.NewContextOptions()
-                .setViewportSize(VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
+                .setViewportSize(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+                // Pinned so the suite does not inherit the developer's locale.
+                .setLocale("en-US"));
         page = context.newPage();
     }
 

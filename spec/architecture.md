@@ -30,6 +30,16 @@
     picks up instead.
   - The failsafe execution sets `vaadin.copilot.enable=false`. In development mode Copilot renders
     a viewport-wide overlay that swallows pointer events, so browser clicks never reach the app.
+    (`mvn verify` builds a production bundle and would not show Copilot anyway; the setting matters
+    when an E2E class is run straight from an IDE.)
+
+  The browser tests are kept independent of the machine they run on: the Playwright context pins
+  `locale=en-US`, and the date/time field is set through its ISO `value` rather than by typing a
+  formatted string — the picker parses according to the browser and JVM locale, and the JDK's CLDR
+  data has changed the AM/PM separator between releases, which otherwise makes the suite pass on
+  one developer's JDK and fail on another's. Dialog open/closed state is asserted from the dialog's
+  own `opened` property, because a closed Vaadin overlay leaves its content in the DOM with a
+  layout box, which a visibility check misreads as "still open".
 
 ---
 

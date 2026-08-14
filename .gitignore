@@ -11,4 +11,11 @@
 # The following files are generated/updated by vaadin-maven-plugin
 node_modules/
 src/main/frontend/generated/
+src/main/frontend/index.html
 vite.generated.ts
+
+# Local H2 database files
+/data/
+
+# Playwright MCP artifacts (snapshots, console logs, screenshots)
+.playwright-mcp/

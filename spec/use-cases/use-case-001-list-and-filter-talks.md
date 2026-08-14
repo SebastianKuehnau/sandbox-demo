@@ -6,7 +6,7 @@
 
 **Goal:** As a visitor, I want to browse and filter presentations and workshops so that I can find talks of interest.
 
-**Status:** Pending
+**Status:** Implemented
 **Date:** 2024-01-01
 
 ---
@@ -83,18 +83,25 @@ User navigates to the public talk listing view or applies a filter/search.
 
 ## Tests
 
-- [ ] Main Flow covered (steps 1–7)
-- [ ] AF-1 covered (empty state)
-- [ ] AF-2 covered (clear filters)
-- [ ] BR-01, BR-02, BR-03, BR-04 covered
+- [x] Main Flow covered (steps 1–7)
+- [x] AF-1 covered (empty state)
+- [x] AF-2 covered (clear filters)
+- [x] BR-01, BR-02, BR-03, BR-04 covered
+
+Covered twice, in `src/test/java/dev/vaadin/usecases/uc001_list_and_filter_talks/`:
+
+| Class | Mechanism | Tests | Run by |
+|-------|-----------|-------|--------|
+| `UC001ListAndFilterTalks` | Vaadin browserless | 10 | `mvn test` |
+| `UC001ListAndFilterTalksE2E` | Playwright (Chromium) | 10 | `mvn verify` |
 
 ---
 
 ## UI Surface
 
-| Page | Access |
-|------|--------|
-| Public Talk Listing | Anonymous |
+| Page | Route | Access |
+|------|-------|--------|
+| Public Talk Listing | `/` | Anonymous |
 
 The public talk listing page includes:
 - A list or table view of all talks with columns/fields for title, speaker, type, date, and duration.

@@ -6,7 +6,7 @@
 
 **Goal:** As an administrator, I want to create, edit, and delete presentations and workshops so that I can manage the talk catalog.
 
-**Status:** Pending
+**Status:** Implemented
 **Date:** 2024-01-01
 
 ---
@@ -19,8 +19,14 @@
 
 ## Preconditions
 
-- User is authenticated and has administrator role.
 - The admin talk management view is accessible.
+
+> **No authentication.** This application deliberately ships without a login.
+> The admin view at `/admin` is reachable by anyone who knows the URL, and
+> "Administrator" below describes a role a person plays, not an authenticated
+> identity the application checks. Adding authentication would mean introducing
+> Spring Security, protecting `/admin`, and adding an access-control test to
+> this use case.
 
 ---
 
@@ -112,7 +118,7 @@ Administrator navigates to the admin talk management view or initiates a create/
 | BR-01 | All fields (title, description, speaker, type, date, duration, location) are mandatory. |
 | BR-02 | Title and speaker name must be non-empty text. |
 | BR-03 | Duration must be a positive integer (minutes). |
-| BR-04 | Scheduled date must be a valid date/time in the future. |
+| BR-04 | Scheduled date must be a valid date/time. A new talk must be scheduled in the future; an edit must also be, but only if it changes the date — leaving an already-past date untouched stays allowed, so talks that have happened remain editable. |
 | BR-05 | Talk type must be selected from PRESENTATION or WORKSHOP enum. |
 | BR-06 | Delete operations require confirmation to prevent accidental loss. |
 | BR-07 | Form validation errors must be displayed with clear messages. |
@@ -121,20 +127,27 @@ Administrator navigates to the admin talk management view or initiates a create/
 
 ## Tests
 
-- [ ] Main Flow covered (steps 1–8)
-- [ ] AF-1 (Edit) covered
-- [ ] AF-2, AF-3 (Delete and Cancel) covered
-- [ ] AF-4 (Validation errors) covered
-- [ ] AF-5 (Cancel form) covered
-- [ ] BR-01 through BR-07 covered
+- [x] Main Flow covered (steps 1–8)
+- [x] AF-1 (Edit) covered
+- [x] AF-2, AF-3 (Delete and Cancel) covered
+- [x] AF-4 (Validation errors) covered
+- [x] AF-5 (Cancel form) covered
+- [x] BR-01 through BR-07 covered
+
+Covered twice, in `src/test/java/dev/vaadin/usecases/uc002_admin_crud_talks/`:
+
+| Class | Mechanism | Tests | Run by |
+|-------|-----------|-------|--------|
+| `UC002AdminCrudTalks` | Vaadin browserless, plus plain `@SpringBootTest` against `TalkService` for the rules that need no UI | 14 | `mvn test` |
+| `UC002AdminCrudTalksE2E` | Playwright (Chromium) | 14 | `mvn verify` |
 
 ---
 
 ## UI Surface
 
-| Page | Access |
-|------|--------|
-| Admin Talk Management | Admin |
+| Page | Route | Access |
+|------|-------|--------|
+| Admin Talk Management | `/admin` | Anonymous — see Preconditions |
 
 The admin talk management page includes:
 - A grid or table listing all talks with columns: title, speaker, type, scheduled date, duration.

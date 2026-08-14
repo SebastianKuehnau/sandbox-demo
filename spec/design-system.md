@@ -114,9 +114,17 @@ Aura computes gap and padding from `--aura-base-size` (unitless, range 12–24).
 
 | Component | When to Use | Notes |
 |-----------|-------------|-------|
-| [e.g., `Button`] | [Primary and secondary actions] | [Use primary variant for main CTA] |
-| [e.g., `Grid`] | [Tabular data display] | [Always enable column sorting] |
-| [e.g., `Notification`] | [User feedback] | [Use appropriate position and duration] |
+| `AppLayout` | Application shell | Navbar holds the app name and a `Tabs` navigation. Adds no content padding — the view owns its padding, so nothing doubles up. |
+| `Card` | One talk in the public listing | `CardVariant.OUTLINED`. Title/subtitle set as strings so the card renders them as a proper heading with `aria-labelledby`. Note: the title is a client-rendered property, so it is not present in the server-side DOM text. |
+| `Badge` | Talk type marker | `CONTRAST` for presentations, `SUCCESS` for workshops — two categories, two visually distinct badges. |
+| `TextField` | Keyword search | `ValueChangeMode.LAZY`, clear button, search icon as prefix. Capped at `28rem` so it does not swallow the filter bar. |
+| `RadioButtonGroup` | Talk type filter | Aura stacks options vertically by default; the filter bar overrides `::part(group-field)` to `flex-direction: row`. |
+| `Grid` | Admin talk list | Sortable columns, a component column for row actions, and `flex: 1` so it fills the page height and scrolls internally rather than sitting in a short default-height box. |
+| `Dialog` | Create/edit form | Holds a `FormLayout` with responsive steps (1 column, 2 from `32em`). Save/Cancel live in the dialog footer. |
+| `Binder` | Form validation | Every UC-002 business rule is a binder validator, so errors appear per field with a specific message. |
+| `ConfirmDialog` | Destructive confirmation | `setConfirmButtonTheme("error primary")` for delete. |
+| `Notification` | Write feedback | `NotificationVariant.SUCCESS`, `Position.BOTTOM_END`, 3 s. |
+| `Button` | Actions | `PRIMARY` for the main action (Create talk, Save), `TERTIARY` for secondary and row actions, `TERTIARY + ERROR` for delete. Icon-only row buttons always carry an `aria-label` and a tooltip. |
 
 ---
 

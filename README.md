@@ -54,6 +54,29 @@ Say you have three use cases: `use-case-001-browse-movies.md`, `use-case-002-buy
 
 After all three you have an application that does the three things you specified, with tests covering each, and a spec folder that explains why everything looks the way it does.
 
+## Running in a Docker Sandbox
+
+This project ships a sandbox kit (`.sbx/kit`) that sets up an isolated dev environment with Vaadin skills, Playwright browser dependencies, and the network access needed for Maven, Vaadin, and GitHub.
+
+1. **Install the Docker Sandbox CLI (`sbx`).** Follow the official guide: https://docs.docker.com/ai/sandboxes/get-started/
+2. **Start the sandbox with this project's kit:**
+
+   ```bash
+   sbx run claude --kit .sbx/kit --name demo-app
+   ```
+
+3. **List running sandboxes** (to check status or find the name again):
+
+   ```bash
+   sbx list
+   ```
+
+4. **Remove the sandbox** when you're done:
+
+   ```bash
+   sbx rm demo-app
+   ```
+
 ## More
 
 - [`spec/README.md`](spec/README.md) — full spec structure and workflow
